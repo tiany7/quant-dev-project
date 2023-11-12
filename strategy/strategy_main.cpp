@@ -5,7 +5,7 @@
 int main(){
     // declare new pipe in and pipeout
     auto pipe_in_ptr = std::make_shared<MPSCChannel<MarketData>>();
-    auto pipe_out_ptr = std::make_shared<MPSCChannel<MarketData>>();
+    auto pipe_out_ptr = std::make_shared<MPSCChannel<Signal>>();
     ExampleStrategy strategy(pipe_in_ptr, pipe_out_ptr);
     std::thread t1([&strategy](){
         strategy.apply_strategy();
@@ -13,7 +13,7 @@ int main(){
     std::thread t2([&pipe_in_ptr](){
         for(int i = 0; i < 12; ++i){
             MarketData data;
-            data.price = 100;
+            data.price = i;
             data.volume = 100;
             data.high = 100;
             pipe_in_ptr->send(data);
@@ -26,8 +26,8 @@ int main(){
         for(int i = 0; i < 12; ++i){
             auto data = pipe_out_ptr->receive();
             std::visit([](auto&& arg) {
-                if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, MarketData>) {
-                    std::cout << arg.price << std::endl;
+                if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, Signal>) {
+                    std::cout << arg.price<< " "<<arg.volume << std::endl;
                 } else {
                     std::cerr << "Error: " << arg << std::endl;
                 }

@@ -28,11 +28,21 @@ struct MarketData {
 };
 
 
+struct Signal{
+    double price;
+    double volume;
+    enum class SignalType{
+        BUY,
+        SELL
+    } type;
+};
+
 class BaseStrategy {
 protected:
-    std::shared_ptr<MPSCChannel<MarketData>> pipe_in, pipe_out; // these are the pipes for the strategy to communicate with the server
+    std::shared_ptr<MPSCChannel<MarketData>> pipe_in;
+    std::shared_ptr<MPSCChannel<Signal>>pipe_out; // these are the pipes for the strategy to communicate with the server
 public:
-    BaseStrategy(std::shared_ptr<MPSCChannel<MarketData>> _pipe_in, std::shared_ptr<MPSCChannel<MarketData>> _pipe_out) : pipe_in(_pipe_in), pipe_out(_pipe_out) {}
+    BaseStrategy(std::shared_ptr<MPSCChannel<MarketData>> _pipe_in, std::shared_ptr<MPSCChannel<Signal>> _pipe_out) : pipe_in(_pipe_in), pipe_out(_pipe_out) {}
     virtual ~BaseStrategy() = default;
 
     virtual void apply_strategy() = 0; // declare it as pure virtual function
