@@ -24,18 +24,19 @@ public:
     // constructor using tuple
     CSVRow(const std::tuple<Ts...>& data) : data_(data) {}
     
-    std::size_t size() const {
+    constexpr std::size_t size() const {
         return sizeof...(Ts);
     }
 
     template <std::size_t Index>
-    const auto get() const {
+    constexpr auto get() const {
         static_assert(Index < sizeof...(Ts), "Index out of range");
         return std::get<Index>(data_);
     }
 
 private:
     std::tuple<Ts...> data_;
+
 };
 
 
@@ -52,7 +53,7 @@ public:
             return std::nullopt;
         }
 
-        std::vector<CSVRow<Ts...>> rows;
+        std::vector<CSVRow<Ts...>> rows;    
 
         std::string line;
         while (std::getline(file, line)) {
