@@ -14,23 +14,23 @@
 #include <string_view>
 
 
-std::chrono::system_clock::time_point ConvertStringToTime(const std::string& timeStr, const std::string& format = "%Y-%m-%d %H:%M:%S") {
-    std::tm tmStruct = {};
-    std::istringstream ss(timeStr);
-    ss >> std::get_time(&tmStruct, format.c_str());
+// std::chrono::system_clock::time_point ConvertStringToTime(const std::string& timeStr, const std::string& format = "%Y-%m-%d %H:%M:%S") {
+//     std::tm tmStruct = {};
+//     std::istringstream ss(timeStr);
+//     ss >> std::get_time(&tmStruct, format.c_str());
 
-    if (ss.fail()) {
-        throw std::runtime_error("Failed to parse the time string");
-    }
+//     if (ss.fail()) {
+//         throw std::runtime_error("Failed to parse the time string");
+//     }
 
-    std::time_t time = std::mktime(&tmStruct);
+//     std::time_t time = std::mktime(&tmStruct);
 
-    if (time == -1) {
-        throw std::runtime_error("Failed to convert the time structure to time_t");
-    }
+//     if (time == -1) {
+//         throw std::runtime_error("Failed to convert the time structure to time_t");
+//     }
 
-    return std::chrono::system_clock::from_time_t(time);
-}
+//     return std::chrono::system_clock::from_time_t(time);
+// }
 
 struct ChannelError{
     std::string msg;
@@ -96,15 +96,15 @@ public:
         std::unique_lock<std::mutex> lock(mutex_);
 
         condition_.wait(lock, [this] { return !queue_.empty() || shutdown_; });
-
+        if (shutdown_) {
+            return Result<T>(ChannelError("Channel has been shutdown"));
+        }
         if (!queue_.empty()) {
             T data = queue_.front();
             queue_.pop();
             return Result<T>(data);
-        } else if (shutdown_) {
-            return Result<T>(ChannelError("Channel has been shutdown"));
         }
-
+        
         return Result<T>(ChannelError("Unknown error"));
     }
 
