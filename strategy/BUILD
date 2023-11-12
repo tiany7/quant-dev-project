@@ -37,3 +37,30 @@ cc_binary(
     copts = ["--std=c++20"],
 )
 
+
+cc_library(
+    name = "base_strategy",
+    srcs = ["base_strategy.cpp"],
+    hdrs = ["base_strategy.h"],
+    visibility = ["//visibility:public"],
+    copts = ["--std=c++20"],
+    deps = [":csv_reader", ":const_def", ":utils"],
+)
+
+cc_library(
+    name = "example_strategy",
+    srcs = ["example_strategy.cpp"],
+    hdrs = ["example_strategy.h"],
+    visibility = ["//visibility:public"],
+    copts = ["--std=c++20"],
+    deps = [":base_strategy"],
+)
+
+
+cc_binary(
+    name = "strategy_main",
+    srcs = ["strategy_main.cpp"],
+    deps = [":base_strategy", ":example_strategy", ":utils"],
+    copts = ["--std=c++20"], # pthread
+    linkopts = ["-pthread"],
+)

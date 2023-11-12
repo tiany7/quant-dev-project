@@ -36,13 +36,38 @@ struct ChannelError{
     std::string msg;
     ChannelError(const std::string& _msg) : msg(_msg) {}
     ChannelError(std::string&& _msg) : msg(_msg) {}
+
+    std::string what() const {
+        return msg;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const ChannelError& error) {
+        os << error.msg;
+        return os;
+    }
+
+    
 };
 
 template <typename T>
 using Result = std::variant<T, ChannelError>;
 
+// overload the << operator for Result<T>
 template <typename T>
-bool is_error(const Result<T>& result) {
+std::ostream& operator<<(std::ostream& os, const Result<T>& result) {
+    if (std::holds_alternative<T>(result)) {
+        os << std::get<T>(result);
+    } else {
+        os << std::get<ChannelError>(result);
+    }
+    return os;
+}
+
+
+
+// write a is_err function
+template <typename T>
+bool is_err(const Result<T>& result) {
     return std::holds_alternative<ChannelError>(result);
 }
 
@@ -52,7 +77,7 @@ bool is_error(const Result<T>& result) {
 template <typename T>
 class MPSCChannel {
 public:
-    MPSCChannel() : shutdown_(false) {}
+    MPSCChannel() : condition_(), shutdown_(false) {}
 
     Result<T> send(const T& data) {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -90,6 +115,10 @@ public:
         }
 
         condition_.notify_all(); // Notify all waiting threads
+    }
+
+    ~MPSCChannel() {
+        shutdown();
     }
 
 private:
