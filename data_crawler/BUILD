@@ -17,5 +17,5 @@ cc_binary(
         "@json_lib//:json",
         ":data_crawler",
     ],
-    linkopts = ["-lcurl"],
+    linkopts = ["-L./curl", "-lcurl"], 
 )
