@@ -12,7 +12,7 @@ The project is built upon C++20 with Bazel.
 ## Modules
 Currently, the project is divided into three modules to make the MVP (Minimum Viable Product) pipeline work.
 
-### Downloader
+### Data_crawler
 The downloader is responsible for fetching financial data from external sources. Our current data for each stock retrieved within a given timeframe will contain each stock's daily fundamentals, including Ticker, Date, High, Low, Open, Close, and Volume.
 
 ### Strategy
