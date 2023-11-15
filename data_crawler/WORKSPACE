@@ -9,5 +9,8 @@ git_repository(
 )
 
 
-
-
+git_repository(
+    name = "curl",
+    remote = "https://github.com/curl/curl.git",
+    commit = "817204c6e41f66dafbaa704d67f828a4288b3577",
+)
