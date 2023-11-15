@@ -1,0 +1,28 @@
+#cc_binary(
+#    name = "my_app",
+#    srcs = ["main.cpp"],
+#    copts = ["-std=c++17", "-Iexternal/nlohmann_json"],
+#    deps = ["@nlohmann_json//:nlohmann_json"],
+#    linkopts = ["-lcurl"],
+#)
+
+
+
+#new_local_repository(
+#    name = "nlohmann_json",
+#    path = "/opt/homebrew/Cellar/nlohmann-json/3.11.2",
+#    build_file_content = """
+#package(default_visibility = ["//visibility:public"])
+#cc_library(
+#    name = "nlohmann_json",
+#    hdrs = glob(["include/nlohmann/**/*.hpp"]),
+#    includes = ["include"],
+#    visibility = ["//visibility:public"],
+#)
+#""",
+#)
+
+
+#bazel build //:my_app
+#./bazel-bin/my_app  
+
