@@ -1,9 +1,9 @@
 // backtester.h
 #pragma once
 
-#include "CSVReader.h"
-#include "base_strategy.h"
-#include "example_strategy.h"
+#include "strategy/CSVReader.h"
+#include "strategy/base_strategy.h"
+#include "strategy/example_strategy.h"
 #include <memory>
 #include <vector>
 

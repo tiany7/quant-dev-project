@@ -3,7 +3,7 @@ cc_library(
     srcs = ["data_crawler.cpp"],
     hdrs = ["data_crawler.h"],
     deps = [
-        "@nlohmann_json//:nlohmann_json",
+        "@json_lib//:json",
         "@curl//:curl",
     ],
     visibility = ["//visibility:public"],
@@ -16,7 +16,6 @@ cc_binary(
     deps = [
         "@json_lib//:json",
         ":data_crawler",
-        # ... any other dependencies
     ],
     linkopts = ["-lcurl"],
 )
