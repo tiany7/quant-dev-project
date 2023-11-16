@@ -36,11 +36,33 @@ void DataCrawler::downloadData(const std::string& url, std::string& readBuffer) 
     }
 }
 
+
 void DataCrawler::parseAndSaveData(const std::string& readBuffer, const std::string& outputPath, const std::string& ticker) {
-    auto data = nlohmann::json::parse(readBuffer);
+    // Parse JSON data
+    nlohmann::json data;
+    try {
+        data = nlohmann::json::parse(readBuffer);
+    } catch (const std::exception& e) {
+        std::cerr << "JSON parsing error: " << e.what() << std::endl;
+        return;
+    }
+
+    // Open CSV file
     std::ofstream csvFile(outputPath, std::ios_base::app);
+    if (!csvFile.is_open()) {
+        std::cerr << "Failed to open file: " << outputPath << std::endl;
+        return;
+    }
+
+    // Check if the 'body' key exists in JSON
+    if (data.find("body") == data.end()) {
+        std::cerr << "JSON does not contain 'body' key" << std::endl;
+        return;
+    }
+
     auto item = data["body"];
 
+    // Write data to CSV
     for (auto it = item.begin(); it != item.end(); ++it) {
         std::string date = it.value().at("date");
         double open = it.value().at("open");
@@ -48,8 +70,14 @@ void DataCrawler::parseAndSaveData(const std::string& readBuffer, const std::str
         double low = it.value().at("low");
         double close = it.value().at("close");
         double volume = it.value().at("volume");
+
         csvFile << ticker << "," << date << "," << open << "," << high << "," << low << "," << close << "," << volume << "\n";
     }
+
+    // Close the file
+    csvFile.close();
+
+    std::cout << "Data written to " << outputPath << std::endl; // Debug information
 }
 
 void DataCrawler::fetchData(const std::string& ticker, const std::string& interval, const std::string& outputPath) {

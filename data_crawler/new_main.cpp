@@ -5,7 +5,7 @@ int main() {
     std::string apiHost = "yahoo-finance15.p.rapidapi.com";
     DataCrawler crawler(apiKey, apiHost);
 
-    std::string ticker = "AAPL"; 
+    std::string ticker = "GOOG"; 
     std::string interval = "5m"; 
     std::string outputPath = "output2.csv"; 
 

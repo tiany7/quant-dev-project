@@ -4,7 +4,7 @@ cc_library(
     hdrs = ["data_crawler.h"],
     deps = [
         "@json_lib//:json",
-        "@curl//:curl",
+        #"@curl//:curl",
     ],
     visibility = ["//visibility:public"],
 )
