@@ -6,11 +6,15 @@
 void ExampleStrategy::apply_strategy() {
     // do nothing here
     for(auto data = pipe_in->receive(); !is_err(data); data = pipe_in->receive()){
-        auto price = std::get<MarketData>(data).price;
+        auto &&item = std::get<MarketData>(data);
         Signal sig;
-        sig.price = price;
-        sig.volume = 100;
+        std::cerr<<"signal: "<<item.price<<" "<<item.volume<<std::endl;
+        sig.price = item.price;
+        sig.volume = item.volume;
         sig.type = Signal::SignalType::BUY;
+        
         pipe_out->send(sig);
     }
+    pipe_out->shutdown();
+    // std::cerr<<"apply strategy done"<<std::endl;
 }

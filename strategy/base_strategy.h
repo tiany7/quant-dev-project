@@ -11,21 +11,7 @@
 
 #include "const_def.h"
 #include "utils.h"
-
-
-
-
-struct MarketData {
-    std::string ticker;
-    std::string start_date;
-    std::string end_date;
-    double price;
-    double high;
-    double low;
-    double open;
-    double close;
-    double volume;
-};
+#include "data_manager.h"
 
 
 struct Signal{

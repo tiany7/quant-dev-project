@@ -96,9 +96,9 @@ public:
         std::unique_lock<std::mutex> lock(mutex_);
 
         condition_.wait(lock, [this] { return !queue_.empty() || shutdown_; });
-        if (shutdown_) {
-            return Result<T>(ChannelError("Channel has been shutdown"));
-        }
+        // if (shutdown_ && queue_.empty()) {
+        //     return Result<T>(ChannelError("Channel has been shutdown"));
+        // }
         if (!queue_.empty()) {
             T data = queue_.front();
             queue_.pop();
@@ -118,7 +118,9 @@ public:
     }
 
     ~MPSCChannel() {
-        shutdown();
+        if (!shutdown_)
+            shutdown();
+        
     }
 
 private:

@@ -44,7 +44,7 @@ cc_library(
     hdrs = ["base_strategy.h"],
     visibility = ["//visibility:public"],
     copts = ["--std=c++20"],
-    deps = [":csv_reader", ":const_def", ":utils"],
+    deps = [":csv_reader", ":const_def", ":utils", ":data_manager"],
 )
 
 cc_library(
@@ -57,10 +57,29 @@ cc_library(
 )
 
 
+cc_library(
+    name = "data_manager",
+    srcs = ["data_manager.cpp"],
+    hdrs = ["data_manager.h"],
+    copts = ["--std=c++20"],
+    visibility = ["//visibility:public"],
+    linkopts = ["-pthread"],
+    deps = [":async_utils", "utils", "const_def", "csv_reader"],
+)
+
 cc_binary(
     name = "strategy_main",
     srcs = ["strategy_main.cpp"],
-    deps = [":base_strategy", ":example_strategy", ":utils"],
+    deps = [":base_strategy", ":example_strategy", ":utils", ":data_manager", ":const_def", ":csv_reader"],
     copts = ["--std=c++20"], # pthread
     linkopts = ["-pthread"],
 )
+
+cc_library(
+    name = "async_utils",
+    hdrs = ["async_utils.hpp"],
+    copts = ["--std=c++20"],
+    visibility = ["//visibility:public"],
+    linkopts = ["-pthread"],
+)
+
