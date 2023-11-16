@@ -25,3 +25,16 @@ The backtester is responsible for running simulations of trading strategies usin
 
 ## Future and TODO
 Our current implementation can only handle a single ticker with a basic mathematical strategy hard-coded in the system. We aim to provide a more robust user interface in the next few weeks and support analysis on multiple tickers simultaneously (which constitutes a portfolio).
+
+## C++ Features Used
+```text
+- std::thread / std::mutex / std::condition_variable
+- std::filesystem
+- std::chrono
+- folding expressions
+- meta-programming
+- std::variant
+- std::optional
+- std::string_view
+- more to be added
+```
