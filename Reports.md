@@ -15,6 +15,8 @@ Currently, the project is divided into three modules to make the MVP (Minimum Vi
 ### Data_crawler
 The data_crawler is responsible for fetching financial data from external sources. Our current data for each stock retrieved within a given timeframe will contain each stock's daily fundamentals, including Ticker, Date, High, Low, Open, Close, and Volume.
 
+### Data Processor
+The data processor is responsible for pulling the data from local filesystem and dispatch the data to the strategy component via channels. The data processor will read the data asynchronously and serves as the in-memory buffer for the strategy component.
 ### Strategy
 The strategy component contains the logic for making trading decisions based on the input data. Each strategy will be able to process a set of data and determine buy/sell signals. The signals will include the buy/sell quantity and price.
 
