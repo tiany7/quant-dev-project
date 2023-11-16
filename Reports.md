@@ -1,8 +1,6 @@
 # Mid-Project Report
 ## Team Member
-name: Yuanhan Tian（yt2825）
-name: Zhizhen Zhu (zz2978)
-name: Hongyi Huo (hh2955)
+Yuanhan Tian（yt2825), Zhizhen Zhu (zz2978), Hongyi Huo (hh2955)
 
 ## Overview
 Our project is a stock market analysis tool, designed with distinct modules for downloading financial data, executing trading strategies, and performing backtesting. It integrates real-time data from sources like Yahoo Finance and applies user-defined trading strategies to assess performance across multiple stock tickers. The system's modular design, coupled with modern C++ features, ensures flexibility, scalability, and efficiency, catering to both individual investors and financial analysts.
