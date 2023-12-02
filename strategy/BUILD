@@ -83,3 +83,10 @@ cc_library(
     linkopts = ["-pthread"],
 )
 
+cc_binary(
+    name = "channel_main",
+    srcs = ["channel_test.cpp"],
+    deps = [":base_strategy", ":example_strategy", ":utils", ":data_manager", ":const_def", ":csv_reader"],
+    copts = ["--std=c++20"], # pthread
+    linkopts = ["-pthread"],
+)
