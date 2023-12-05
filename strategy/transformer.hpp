@@ -5,6 +5,7 @@
 #include <vector>
 #include <future>
 #include <functional>
+#include <chrono>
 
 #include "utils.h"
 #include "data_manager.h"
@@ -34,12 +35,12 @@ public:
     virtual void transform(std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out){
         // checks for condition
         // if condition is not met, directly throw
-        // std::cerr<<"validate entered"<<std::endl;
+        std::cout<<"validate entered\n";
         for(auto data = pipe_in[0]->receive(); !is_err(data); data = pipe_in[0]->receive()){
             // std::cerr<<pipe_in[0].ref_count()<<std::endl;
             auto &&item = std::get<std::any>(data);
             auto &&real_item = std::any_cast<MarketData>(item);
-            // std::cerr<<"price: "<<real_item.price<<std::endl;
+            std::cerr<<"validate price: "<<real_item.price<<std::endl;
             if(real_item.price < 0){
                 throw std::runtime_error("price should be positive");
             }
@@ -66,7 +67,7 @@ public:
     virtual void transform(std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out){
         // checks for condition
         // if condition is not met, directly throw
-        // std::cerr<<"augment entered"<<std::endl;
+        std::cerr<<"augment entered"<<std::endl;
         for(auto data = pipe_in[0]->receive(); !is_err(data); data = pipe_in[0]->receive()){
             // std::cerr<<pipe_in[0].ref_count()<<std::endl;
             // std::cerr<<"received any"<<std::endl;
@@ -85,24 +86,55 @@ public:
 };
 
 
-class TransformerManager {
+class PipelineManager {
 private:
     // std::vector<std::shared_future<void>> handles;
-public:
-    TransformerManager() = default;
-    ~TransformerManager() = default;
+    // add high resolution clock to measure each step's time
+        std::chrono::high_resolution_clock::time_point start_time;
+        std::chrono::high_resolution_clock::time_point end_time;
+        std::vector<std::pair<std::string, std::future<std::chrono::milliseconds>>> records;
+        std::string get_indent(int num){
+            return std::string(num * 2, ' ');
+        }
 
-    TransformerManager& apply(std::function<void(std::vector<incoming_pipe_t> &&, std::vector<outgoing_pipe_t> &&)> transformer, std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out){
-        std::thread t(transformer, std::move(pipe_in), std::move(pipe_out));
-        t.detach();
-        std::cerr<<"thread joined"<<std::endl;
-        return *this;
+        std::string get_lines(int num){
+            return std::string(num, '-');
+        }
+    public:
+        PipelineManager(): start_time(std::chrono::high_resolution_clock::now()) {}
+    ~PipelineManager() {
+        end_time = std::chrono::high_resolution_clock::now();
+        std::cerr<<"total time: "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count()<<std::endl;
+        for(auto && [name, fut] : records){
+            std::cerr<<get_indent(1)<<get_lines(10)<<name<<get_lines(10)<<std::endl;
+            std::cerr<<get_indent(2)<<"time: "<<fut.get().count()<<std::endl;
+        }
     }
 
-    // void wait(){
-    //     for(auto &handle : handles){
-    //         handle.wait();
-    //     }
-    // }
+    PipelineManager& apply(std::function<void(std::vector<incoming_pipe_t> &&, std::vector<outgoing_pipe_t> &&)> transformer, std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out){
+        std::cerr<<"thread joined"<<std::endl;
+        auto prom = std::make_shared<std::promise<std::chrono::milliseconds>>();
+        auto fut = prom->get_future();
+        auto timed_func = [prom, transformer](std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out) mutable {
+            std::cerr<<"thread started"<<std::endl;
+            auto start_time = std::chrono::high_resolution_clock::now();
+            transformer(std::move(pipe_in), std::move(pipe_out));
+            auto end_time = std::chrono::high_resolution_clock::now();
+            prom->set_value(std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));
+        };
+        records.push_back(std::make_pair("unknown", std::move(fut)));
+        std::thread t(timed_func, std::move(pipe_in), std::move(pipe_out));
+        t.detach();
+        
+        return *this;
+    }
+    PipelineManager& in_span(const std::string& name){
+        if(records.empty()){
+            throw std::runtime_error("no previous record");
+        }
+        auto &&[prev_name, prev_fut] = records.back();
+        prev_name = name;
+        return *this;
+    }
 
 };

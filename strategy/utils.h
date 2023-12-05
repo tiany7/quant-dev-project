@@ -12,6 +12,7 @@
 #include <variant>
 #include <string>
 #include <string_view>
+#include <any>
 
 // std::chrono::system_clock::time_point ConvertStringToTime(const std::string& timeStr, const std::string& format = "%Y-%m-%d %H:%M:%S") {
 //     std::tm tmStruct = {};
@@ -266,3 +267,7 @@ namespace utils::mpsc
         return std::make_pair(sender_ptr, std::move(receiver_ptr));
     }
 }
+
+
+using receiver_t = std::unique_ptr<utils::mpsc::Receiver<std::any>>;
+using sender_t = std::shared_ptr<utils::mpsc::Sender<std::any>>;

@@ -39,7 +39,7 @@ class DataManager {
 private:
     CSVReader<CSV_ROW_TYPES> reader;
     std::vector<std::future<void>> join_handles;
-    using receiver_type = std::shared_ptr<MPSCChannel<MarketData>>;
+    using receiver_type = std::unique_ptr<utils::mpsc::Receiver<MarketData>>;
 public:
     
     DataManager();

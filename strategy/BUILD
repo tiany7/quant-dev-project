@@ -84,8 +84,8 @@ cc_library(
 )
 
 cc_binary(
-    name = "channel_main",
-    srcs = ["channel_test.cpp"],
+    name = "main_server",
+    srcs = ["main_server.cpp"],
     deps = [":base_strategy", ":example_strategy", ":utils", ":data_manager", ":const_def", ":csv_reader", ":transformer"],
     copts = ["--std=c++20"], # pthread
     linkopts = ["-pthread"],

@@ -4,9 +4,11 @@
 class ExampleStrategy : public BaseStrategy {
 
 public:
-    ExampleStrategy(std::shared_ptr<MPSCChannel<MarketData>> _pipe_in, std::shared_ptr<MPSCChannel<Signal>> _pipe_out) : BaseStrategy(_pipe_in, _pipe_out) {}   
+    ExampleStrategy() : BaseStrategy() {}   
 
-    virtual void apply_strategy() override;
+    virtual void apply_strategy(std::vector<receiver_t> &&pipe_in, std::vector<sender_t> &&pipe_out) override;
 
     virtual ~ExampleStrategy() = default;
+
+    void operator()(std::vector<receiver_t> &&_pipe_in, std::vector<sender_t> &&_pipe_out);
 };
