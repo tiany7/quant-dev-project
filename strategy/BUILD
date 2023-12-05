@@ -86,7 +86,15 @@ cc_library(
 cc_binary(
     name = "channel_main",
     srcs = ["channel_test.cpp"],
-    deps = [":base_strategy", ":example_strategy", ":utils", ":data_manager", ":const_def", ":csv_reader"],
+    deps = [":base_strategy", ":example_strategy", ":utils", ":data_manager", ":const_def", ":csv_reader", ":transformer"],
     copts = ["--std=c++20"], # pthread
+    linkopts = ["-pthread"],
+)
+
+cc_library(
+    name = "transformer",
+    hdrs = ["transformer.hpp"],
+    copts = ["--std=c++20"],
+    visibility = ["//visibility:public"],
     linkopts = ["-pthread"],
 )

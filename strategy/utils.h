@@ -249,6 +249,10 @@ namespace utils::mpsc
             return channel_ptr->receive();
         }
 
+        void force_exit() {
+            channel_ptr->force_exit();
+        }
+
         ~Receiver() {
             channel_ptr->force_exit();
         }
