@@ -13,110 +13,126 @@
 using outgoing_pipe_t = std::shared_ptr<utils::mpsc::Sender<std::any>>;
 using incoming_pipe_t = std::unique_ptr<utils::mpsc::Receiver<std::any>>;
 
-class BaseTransformer {
+class BaseTransformer
+{
 public:
     BaseTransformer() = default;
     virtual ~BaseTransformer() = default;
     virtual void transform(std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out) = 0;
-    void operator()(std::vector<incoming_pipe_t> &&_pipe_in, std::vector<outgoing_pipe_t> &&_pipe_out){
-    
+    void operator()(std::vector<incoming_pipe_t> &&_pipe_in, std::vector<outgoing_pipe_t> &&_pipe_out)
+    {
+
     } // declare it as pure virtual function
 };
 
-
-class ValidateTransformer : public BaseTransformer {
+class ValidateTransformer : public BaseTransformer
+{
 public:
     ValidateTransformer() = default;
     virtual ~ValidateTransformer() = default;
-    void operator()(std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out){
+    void operator()(std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out)
+    {
         this->transform(std::move(pipe_in), std::move(pipe_out));
     }
 
-    virtual void transform(std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out){
+    virtual void transform(std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out)
+    {
         // checks for condition
         // if condition is not met, directly throw
-        std::cout<<"validate entered\n";
-        for(auto data = pipe_in[0]->receive(); !is_err(data); data = pipe_in[0]->receive()){
+        std::cout << "validate entered\n";
+        for (auto data = pipe_in[0]->receive(); !is_err(data); data = pipe_in[0]->receive())
+        {
             // std::cerr<<pipe_in[0].ref_count()<<std::endl;
             auto &&item = std::get<std::any>(data);
             auto &&real_item = std::any_cast<MarketData>(item);
-            std::cerr<<"validate price: "<<real_item.price<<std::endl;
-            if(real_item.price < 0){
+            std::cerr << "validate price: " << real_item.price << std::endl;
+            if (real_item.price < 0)
+            {
                 throw std::runtime_error("price should be positive");
             }
             pipe_out[0]->send(real_item);
         }
-        std::cerr<<"validate finished\n";
+        std::cerr << "validate finished\n";
         // reduce ref_count of pipe_in[0] by one
-        std::cerr<<pipe_out[0].use_count()<<std::endl;
+        std::cerr << pipe_out[0].use_count() << std::endl;
         // pipe_out[0].reset();
-
     }
 };
 
-
-class AugmentTransformer : public BaseTransformer {
+class AugmentTransformer : public BaseTransformer
+{
 public:
     AugmentTransformer() = default;
     virtual ~AugmentTransformer() = default;
 
-    void operator()(std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out){
+    void operator()(std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out)
+    {
         this->transform(std::move(pipe_in), std::move(pipe_out));
     }
 
-    virtual void transform(std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out){
+    virtual void transform(std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out)
+    {
         // checks for condition
         // if condition is not met, directly throw
-        std::cerr<<"augment entered"<<std::endl;
-        for(auto data = pipe_in[0]->receive(); !is_err(data); data = pipe_in[0]->receive()){
+        std::cerr << "augment entered" << std::endl;
+        for (auto data = pipe_in[0]->receive(); !is_err(data); data = pipe_in[0]->receive())
+        {
             // std::cerr<<pipe_in[0].ref_count()<<std::endl;
             // std::cerr<<"received any"<<std::endl;
             auto &&item = std::get<std::any>(data);
             auto &&real_item = std::any_cast<MarketData>(item);
-            
+
             real_item.price += 100;
-            if(real_item.price < 0){
+            if (real_item.price < 0)
+            {
                 throw std::runtime_error("price should be positive");
             }
             pipe_out[0]->send(real_item);
         }
-        std::cerr<<"augment finished\n";
+        std::cerr << "augment finished\n";
         // pipe_out[0].reset();
     }
 };
 
-
-class PipelineManager {
+class PipelineManager
+{
 private:
     // std::vector<std::shared_future<void>> handles;
     // add high resolution clock to measure each step's time
-        std::chrono::high_resolution_clock::time_point start_time;
-        std::chrono::high_resolution_clock::time_point end_time;
-        std::vector<std::pair<std::string, std::future<std::chrono::milliseconds>>> records;
-        std::string get_indent(int num){
-            return std::string(num * 2, ' ');
-        }
+    std::chrono::high_resolution_clock::time_point start_time;
+    std::chrono::high_resolution_clock::time_point end_time;
+    std::vector<std::pair<std::string, std::future<std::chrono::milliseconds>>> records;
+    std::string get_indent(int num)
+    {
+        return std::string(num * 2, ' ');
+    }
 
-        std::string get_lines(int num){
-            return std::string(num, '-');
-        }
-    public:
-        PipelineManager(): start_time(std::chrono::high_resolution_clock::now()) {}
-    ~PipelineManager() {
+    std::string get_lines(int num)
+    {
+        return std::string(num, '-');
+    }
+
+public:
+    PipelineManager() : start_time(std::chrono::high_resolution_clock::now()) {}
+    ~PipelineManager()
+    {
         end_time = std::chrono::high_resolution_clock::now();
-        std::cerr<<"total time: "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count()<<std::endl;
-        for(auto && [name, fut] : records){
-            std::cerr<<get_indent(1)<<get_lines(10)<<name<<get_lines(10)<<std::endl;
-            std::cerr<<get_indent(2)<<"time: "<<fut.get().count()<<std::endl;
+        std::cerr << "total time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << std::endl;
+        for (auto &&[name, fut] : records)
+        {
+            std::cerr << get_indent(1) << get_lines(10) << name << get_lines(10) << std::endl;
+            std::cerr << get_indent(2) << "time: " << fut.get().count() << std::endl;
         }
     }
 
-    PipelineManager& apply(std::function<void(std::vector<incoming_pipe_t> &&, std::vector<outgoing_pipe_t> &&)> transformer, std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out){
-        std::cerr<<"thread joined"<<std::endl;
+    PipelineManager &apply(std::function<void(std::vector<incoming_pipe_t> &&, std::vector<outgoing_pipe_t> &&)> transformer, std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out)
+    {
+        std::cerr << "thread joined" << std::endl;
         auto prom = std::make_shared<std::promise<std::chrono::milliseconds>>();
         auto fut = prom->get_future();
-        auto timed_func = [prom, transformer](std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out) mutable {
-            std::cerr<<"thread started"<<std::endl;
+        auto timed_func = [prom, transformer](std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out) mutable
+        {
+            std::cerr << "thread started" << std::endl;
             auto start_time = std::chrono::high_resolution_clock::now();
             transformer(std::move(pipe_in), std::move(pipe_out));
             auto end_time = std::chrono::high_resolution_clock::now();
@@ -125,16 +141,18 @@ private:
         records.push_back(std::make_pair("unknown", std::move(fut)));
         std::thread t(timed_func, std::move(pipe_in), std::move(pipe_out));
         t.detach();
-        
+
         return *this;
     }
-    PipelineManager& in_span(const std::string& name){
-        if(records.empty()){
+    PipelineManager &in_span(const std::string &name)
+    {
+        if (records.empty())
+        {
             throw std::runtime_error("no previous record");
         }
         auto &&[prev_name, prev_fut] = records.back();
         prev_name = name;
         return *this;
     }
-
 };
+

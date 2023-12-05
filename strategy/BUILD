@@ -98,3 +98,20 @@ cc_library(
     visibility = ["//visibility:public"],
     linkopts = ["-pthread"],
 )
+
+cc_library(
+    name = "fuzzer",
+    hdrs = ["fuzzer.h"],
+    srcs = ["fuzzer.cpp"],
+    copts = ["--std=c++20"],
+    visibility = ["//visibility:public"],
+    linkopts = ["-pthread"],
+)
+
+cc_binary(
+    name = "benchmark",
+    srcs = ["benchmark.cpp"],
+    deps = [":fuzzer", ":base_strategy", ":example_strategy", ":utils", ":data_manager", ":const_def", ":csv_reader", ":transformer"],
+    copts = ["--std=c++20"], # pthread
+    linkopts = ["-pthread"],
+)
