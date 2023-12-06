@@ -5,9 +5,10 @@
 
 void ExampleStrategy::apply_strategy(std::vector<receiver_t> &&pipe_in, std::vector<sender_t> &&pipe_out) {
     // do nothing here
-    std::cerr<<"example strategy called!!"<<std::endl;
+    // std::cerr<<"example strategy called!!"<<std::endl;
+    int now = 0;
     for(auto data = pipe_in[0]->receive(); !is_err(data); data = pipe_in[0]->receive()){
-
+        ++now;
         auto &&real_item = std::get<std::any>(data);
         auto &&item = std::any_cast<MarketData>(real_item);
         Signal sig;
@@ -20,9 +21,10 @@ void ExampleStrategy::apply_strategy(std::vector<receiver_t> &&pipe_in, std::vec
 
         sig.price = item.close - item.open * 0.01 * (rand() % 10) * (item.high - item.low) / 100.0 + item.open;
         sig.volume = item.volume * 0.01 * (rand() % 10) * 100;
-        
+        std::cerr<<"recv price: "<<now<<" "<<item.close<<std::endl;
         pipe_out[0]->send(sig);
     }
+    std::cerr<<"example strategy finished"<<std::endl;
 }
 
 void ExampleStrategy::operator()(std::vector<receiver_t> &&_pipe_in, std::vector<sender_t> &&_pipe_out){

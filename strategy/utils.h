@@ -166,31 +166,33 @@ namespace utils::mpsc
             condition_.wait(lock, [this]{ return queue_.size() < capacity || exit_; });
 
             if (exit_) {
+                condition_.notify_one();
                 return Result<T>(ChannelError("Channel has been closed"));
             }
-            queue_.push_back(data);
+            queue_.push(data);
             condition_.notify_one();
+
 
             return Result<T>(data);
         }
 
         Result<T> receive()
         {
-            std::unique_lock<std::mutex> lock(mutex_);
+            std::unique_lock<std::mutex> lock(mutex_, std::adopt_lock);
 
             condition_.wait(lock, [this]
                             { return !queue_.empty() || shutdown_ || exit_; });
             // if (shutdown_ && queue_.empty()) {
             //     return Result<T>(ChannelError("Channel has been shutdown"));
             // }
-            // std::cerr<<"queue size: "<<queue_.size()<<std::endl;
             if (!queue_.empty())
             {
                 T data = queue_.front();
-                queue_.pop_front();
+                queue_.pop();
+                condition_.notify_one();
                 return Result<T>(data);
             }
-
+            condition_.notify_one();
             return Result<T>(ChannelError("Unknown error"));
         }
 
@@ -216,7 +218,7 @@ namespace utils::mpsc
         }
 
     private:
-        std::deque<T> queue_;
+        std::queue<T> queue_;
         int capacity;
         std::mutex mutex_;
         std::condition_variable condition_;
@@ -236,6 +238,7 @@ namespace utils::mpsc
         }
 
         ~Sender() {
+            std::cerr<<"sender destructed"<<std::endl;
             channel_ptr->shutdown();
         }
     };
@@ -255,6 +258,7 @@ namespace utils::mpsc
         }
 
         ~Receiver() {
+            std::cerr<<"receiver destructed"<<std::endl;
             channel_ptr->force_exit();
         }
     };
@@ -264,7 +268,7 @@ namespace utils::mpsc
         auto channel = new utils::mpsc::MPSCChannel<T>(capacity);
         auto sender_ptr = std::make_shared<Sender<T>>(channel);
         auto receiver_ptr = std::make_unique<Receiver<T>>(channel);
-        return std::make_pair(sender_ptr, std::move(receiver_ptr));
+        return std::make_pair(std::move(sender_ptr), std::move(receiver_ptr));
     }
 }
 

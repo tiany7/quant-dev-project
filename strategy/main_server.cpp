@@ -10,19 +10,19 @@
 #include "const_def.h"
 int main(){
     auto [tx, rx] = utils::mpsc::create_channel<std::any>(10);
-    auto empty_tx_vec = std::vector<std::shared_ptr<utils::mpsc::Sender<std::any>>>{};
-    auto rx_vec = std::vector<std::unique_ptr<utils::mpsc::Receiver<std::any>>>();
+    auto empty_tx_vec = std::vector<sender_t>{};
+    auto rx_vec = std::vector<receiver_t>();
     auto [augment_tx, augment_rx] = utils::mpsc::create_channel<std::any>(10);
     rx_vec.push_back(std::move(rx));
-    auto validate_tx_vec = std::vector<std::shared_ptr<utils::mpsc::Sender<std::any>>>{};
+    auto validate_tx_vec = std::vector<sender_t>{};
     validate_tx_vec.emplace_back(std::move(augment_tx));
-    auto validate_rx_vec = std::vector<std::unique_ptr<utils::mpsc::Receiver<std::any>>>();
+    auto validate_rx_vec = std::vector<receiver_t>();
     validate_rx_vec.push_back(std::move(augment_rx));
     auto [main_tx, main_rx] = utils::mpsc::create_channel<std::any>(10);
-    auto tx_vec = std::vector<std::shared_ptr<utils::mpsc::Sender<std::any>>>{};
+    auto tx_vec = std::vector<sender_t>{};
     tx_vec.emplace_back(std::move(main_tx));
-    using sender_t = std::shared_ptr<utils::mpsc::Sender<std::any>>;
-    using receiver_t = std::unique_ptr<utils::mpsc::Receiver<std::any>>;
+    using sender_t = sender_t;
+    using receiver_t = receiver_t;
     ValidateTransformer validate_transformer;
     AugmentTransformer augment_transformer;
 
@@ -36,7 +36,7 @@ int main(){
             
             
             auto &&real_item = std::get<MarketData>(data);
-            // std::cerr<<"price: "<<real_item.price<<std::endl;
+            std::cerr<<"send price: "<<real_item.price<<std::endl;
             tx->send(real_item);
         }
         std::cerr<<"t1 finished "<<tx.use_count()<<std::endl;

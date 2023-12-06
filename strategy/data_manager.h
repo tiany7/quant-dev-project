@@ -38,7 +38,7 @@ struct MarketData {
 class DataManager {
 private:
     CSVReader<CSV_ROW_TYPES> reader;
-    std::vector<std::future<void>> join_handles;
+    std::vector<std::thread> join_handles;
     using receiver_type = std::unique_ptr<utils::mpsc::Receiver<MarketData>>;
 public:
     

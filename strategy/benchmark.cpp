@@ -2,6 +2,8 @@
 #include <iostream>
 #include <any>
 
+#include <unistd.h>
+
 #include "utils.h"
 #include "transformer.hpp"
 #include "example_strategy.h"
@@ -21,7 +23,7 @@ int main(int argc, char** argv){
     std::string output_dir;
     int opt;
 
-    while ((opt = getopt(argc, argv, "l:s:e:")) != -1) {
+    while ((opt = getopt(argc, argv, "l:s:e:f:")) != -1) {
         switch (opt) {
         case 'l':
             num_lines = atoi(optarg);
@@ -35,7 +37,7 @@ int main(int argc, char** argv){
         case 'f':
             output_dir = optarg;
             break;
-        default: /* '?' */
+        default: 
             fprintf(stderr, "Usage: %s [-l num_lines] [-s start_year] [-e end_year]\n",
                     argv[0]);
             exit(EXIT_FAILURE);
@@ -62,9 +64,9 @@ int main(int argc, char** argv){
     AugmentTransformer augment_transformer;
 
     // we get the input stream from the file
-    std::thread t1([](sender_t &&tx){
+    std::thread t1([output_dir](sender_t &&tx){
         DataManager data_mgr;
-        std::string current_path = std::string(global_path) + "example.csv";
+        std::string current_path = std::string(global_path) + output_dir;
         auto &&rx = data_mgr.read_csv(current_path);
         for (auto data = rx->receive(); !is_err(data); data = rx->receive()){
             // auto &&item = std::get<std::any>(data);

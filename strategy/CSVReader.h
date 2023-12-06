@@ -33,6 +33,26 @@ std::string parseField<std::string>(std::istringstream& ss) {
     return field;
 }
 
+template <>
+float parseField<float>(std::istringstream& ss) {
+    float field;
+    ss >> field;
+    if (ss.peek() == ',') {
+        ss.ignore();
+    }
+    return field;
+}
+
+template <>
+double parseField<double>(std::istringstream& ss) {
+    float field;
+    ss >> field;
+    if (ss.peek() == ',') {
+        ss.ignore();
+    }
+    return field;
+}
+
 template <typename... Ts>
 class CSVRow {
 public:
@@ -104,7 +124,6 @@ public:
         while (std::getline(file, line)) {
             rows.emplace_back(parseLine(line, std::index_sequence_for<Ts...>{}));
         }
-
         return rows;
     }
 

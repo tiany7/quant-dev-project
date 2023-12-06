@@ -10,8 +10,8 @@
 #include "utils.h"
 #include "data_manager.h"
 
-using outgoing_pipe_t = sender_t;
-using incoming_pipe_t = receiver_t;
+using outgoing_pipe_t = std::shared_ptr<utils::mpsc::Sender<std::any>>;
+using incoming_pipe_t = std::unique_ptr<utils::mpsc::Receiver<std::any>>;
 
 class BaseTransformer
 {
@@ -45,7 +45,7 @@ public:
             // std::cerr<<pipe_in[0].ref_count()<<std::endl;
             auto &&item = std::get<std::any>(data);
             auto &&real_item = std::any_cast<MarketData>(item);
-            std::cerr << "validate firm: " << real_item.ticker << std::endl;
+            std::cerr << "validate price: " << real_item.price << std::endl;
             if (real_item.price < 0)
             {
                 throw std::runtime_error("price should be positive");
@@ -87,10 +87,8 @@ public:
             {
                 throw std::runtime_error("price should be positive");
             }
-            std::cerr << "augment firm: " << real_item.ticker << std::endl;
             pipe_out[0]->send(real_item);
         }
-        // pipe_out[0].reset();
         std::cerr << "augment finished\n";
         // pipe_out[0].reset();
     }
@@ -104,7 +102,6 @@ private:
     std::chrono::high_resolution_clock::time_point start_time;
     std::chrono::high_resolution_clock::time_point end_time;
     std::vector<std::pair<std::string, std::future<std::chrono::milliseconds>>> records;
-    std::vector<std::thread> threads;
     std::string get_indent(int num)
     {
         return std::string(num * 2, ' ');
@@ -119,17 +116,13 @@ public:
     PipelineManager() : start_time(std::chrono::high_resolution_clock::now()) {}
     ~PipelineManager()
     {
-        for (auto &&t : threads)
-        {
-            t.join();
-        }
-        end_time = std::chrono::high_resolution_clock::now();
-        std::cerr << "total time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << std::endl;
-        for (auto &&[name, fut] : records)
-        {
-            std::cerr << get_indent(1) << get_lines(10) << name << get_lines(10) << std::endl;
-            std::cerr << get_indent(2) << "time: " << fut.get().count() << std::endl;
-        }
+        // end_time = std::chrono::high_resolution_clock::now();
+        // std::cerr << "total time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << std::endl;
+        // for (auto &&[name, fut] : records)
+        // {
+        //     std::cerr << get_indent(1) << get_lines(10) << name << get_lines(10) << std::endl;
+        //     std::cerr << get_indent(2) << "time: " << fut.get().count() << std::endl;
+        // }
     }
 
     PipelineManager &apply(std::function<void(std::vector<incoming_pipe_t> &&, std::vector<outgoing_pipe_t> &&)> transformer, std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out)
@@ -139,7 +132,7 @@ public:
         auto fut = prom->get_future();
         auto timed_func = [prom, transformer](std::vector<incoming_pipe_t> &&pipe_in, std::vector<outgoing_pipe_t> &&pipe_out) mutable
         {
-            std::cerr << "thread started" << std::endl;
+            // std::cerr << "thread started" << std::endl;
             auto start_time = std::chrono::high_resolution_clock::now();
             transformer(std::move(pipe_in), std::move(pipe_out));
             auto end_time = std::chrono::high_resolution_clock::now();
@@ -147,7 +140,7 @@ public:
         };
         records.push_back(std::make_pair("unknown", std::move(fut)));
         std::thread t(timed_func, std::move(pipe_in), std::move(pipe_out));
-        threads.push_back(std::move(t));
+        t.join();
 
         return *this;
     }
@@ -162,3 +155,4 @@ public:
         return *this;
     }
 };
+

@@ -6,9 +6,9 @@ DataManager::DataManager() : reader() {}
 
 // this creates a file reader stream that could asynchronously read the file
 DataManager::receiver_type DataManager::read_csv(const std::string& file_path) {
-        auto [tx, rx] = utils::mpsc::create_channel<MarketData>(2);
+        auto [tx, rx] = utils::mpsc::create_channel<MarketData>(10);
         // std::cerr<<"reading file: "<<file_path<<std::endl;
-        join_handles.emplace_back(std::async( [this, file_path](std::shared_ptr<utils::mpsc::Sender<MarketData>>&& tx){
+        join_handles.emplace_back(std::thread( [this, file_path](std::shared_ptr<utils::mpsc::Sender<MarketData>>&& tx){
             auto rows = this->reader.read_from(file_path);
             if (!rows) {
                 std::cerr << "unable to read the file: " << file_path << std::endl;
@@ -29,7 +29,7 @@ DataManager::receiver_type DataManager::read_csv(const std::string& file_path) {
                     std::cerr<<data<<std::endl;
                     tx->send(data);
             }
-            std::cerr<<"finished reading file: "<<tx.use_count()<<std::endl;
+            std::cout<<"finished reading file: "<<tx.use_count()<<std::endl;
             tx.reset();
         }, std::move(tx)));
         // auto rows = this->reader.read_from(file_path);
@@ -58,7 +58,7 @@ DataManager::receiver_type DataManager::read_csv(const std::string& file_path) {
 
 void DataManager::join() {
         for (auto& handle : join_handles) {
-            handle.wait();
+            handle.join();
         }
 }
 
