@@ -115,3 +115,11 @@ cc_binary(
     copts = ["--std=c++20"], # pthread
     linkopts = ["-pthread"],
 )
+
+cc_binary(
+    name = "runner",
+    srcs = ["simple_runner.cpp"],
+    deps = [":base_strategy", ":example_strategy", ":utils", ":data_manager", ":const_def", ":csv_reader", ":transformer"],
+    copts = ["--std=c++20"], # pthread
+    linkopts = ["-pthread"],
+)

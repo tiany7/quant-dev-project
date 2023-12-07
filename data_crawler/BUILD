@@ -19,3 +19,15 @@ cc_binary(
     ],
     linkopts = ["-L./curl", "-lcurl"], 
 )
+
+
+cc_binary(
+    name = "crawler",
+    srcs = ["crawler_main.cpp"],
+    copts = ["-std=c++17"],
+    deps = [
+        "@json_lib//:json",
+        ":data_crawler",
+    ],
+    linkopts = ["-L./curl", "-lcurl"], 
+)

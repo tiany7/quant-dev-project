@@ -15,7 +15,8 @@ using RowType = enum {
 };
 
 
-constexpr std::string_view global_path = "/home/tiany7/quant-dev-project/strategy/";
+// constexpr std::string_view global_path = "/home/tiany7/quant-dev-project/strategy/";
+constexpr std::string_view global_path = "/Users/zzhu/Documents/Columbia/COMS4995/proj/quant-dev-project/strategy/";
 
 
 using kTickerType = std::string;
