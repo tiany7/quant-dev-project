@@ -14,18 +14,23 @@
 int main(int argc, char** argv){
     std::string current_path;
     int opt;
+    int balance;
 
-    while ((opt = getopt(argc, argv, "i:")) != -1) {
+    while ((opt = getopt(argc, argv, "i:b:")) != -1) {
         switch (opt) {
         case 'i':
             current_path = optarg;
             break;
+        case 'b':
+            balance = atoi(optarg);
+            break;
         default: 
-            fprintf(stderr, "Usage: %s [-i input_file]\n",
+            fprintf(stderr, "Usage: %s [-i input_file] [-b init_balance]\n",
                     argv[0]);
             exit(EXIT_FAILURE);
         }
     }
+
 
     auto [tx, rx] = utils::mpsc::create_channel<std::any>(10);
     auto empty_tx_vec = std::vector<std::shared_ptr<utils::mpsc::Sender<std::any>>>{};
@@ -81,11 +86,18 @@ int main(int argc, char** argv){
     for (auto data = algo_rx->receive(); !is_err(data); data = algo_rx->receive()){
         auto &&item = std::get<std::any>(data);
         auto &&sig = std::any_cast<Signal>(item);
+        if(sig.type == Signal::SignalType::BUY){
+            balance -= sig.price * sig.volume;
+        }
+        else{
+            balance += sig.price * sig.volume;
+        }
         std::cerr<<(sig.type == Signal::SignalType::BUY ? "BUY" : "SELL")<<std::endl;
         std::cerr<<"price: "<<sig.price<<std::endl;
         std::cerr<<"volume: "<<sig.volume<<std::endl;
         // check main_tx's ref_count
     }
     
+    std::cerr<<"finish running, the final balance is: "<<balance<<std::endl;
     return 0;
 }
