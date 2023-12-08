@@ -15,6 +15,10 @@ int main(int argc, char** argv){
     std::string current_path;
     int opt;
     int balance;
+    int initial_balance;
+    int current_holdings = 0;
+    int total_loss = 0;  
+    int total_earnings = 0;
 
     while ((opt = getopt(argc, argv, "i:b:")) != -1) {
         switch (opt) {
@@ -23,6 +27,7 @@ int main(int argc, char** argv){
             break;
         case 'b':
             balance = atoi(optarg);
+            initial_balance = balance;
             break;
         default: 
             fprintf(stderr, "Usage: %s [-i input_file] [-b init_balance]\n",
@@ -62,7 +67,7 @@ int main(int argc, char** argv){
             // std::cerr<<"price: "<<real_item.price<<std::endl;
             tx->send(real_item);
         }
-        std::cerr<<"t1 finished "<<tx.use_count()<<std::endl;
+        // std::cerr<<"t1 finished "<<tx.use_count()<<std::endl;
         
     }, std::move(tx));
     // std::cerr<<"t1 finished "<<tx.use_count()<<std::endl;
@@ -86,18 +91,28 @@ int main(int argc, char** argv){
     for (auto data = algo_rx->receive(); !is_err(data); data = algo_rx->receive()){
         auto &&item = std::get<std::any>(data);
         auto &&sig = std::any_cast<Signal>(item);
+        int transaction_cost = sig.price * sig.volume;
+
         if(sig.type == Signal::SignalType::BUY){
-            balance -= sig.price * sig.volume;
+            balance -= transaction_cost;
+            current_holdings += sig.volume;
         }
         else{
-            balance += sig.price * sig.volume;
+            balance += transaction_cost;
+            current_holdings -= sig.volume;
+            total_earnings += transaction_cost - (sig.price * sig.volume);
         }
-        std::cerr<<(sig.type == Signal::SignalType::BUY ? "BUY" : "SELL")<<std::endl;
-        std::cerr<<"price: "<<sig.price<<std::endl;
-        std::cerr<<"volume: "<<sig.volume<<std::endl;
-        // check main_tx's ref_count
+
+        std::cerr << (sig.type == Signal::SignalType::BUY ? "BUY" : "SELL") << std::endl;
+        std::cerr << "price: " << sig.price << std::endl;
+        std::cerr << "volume: " << sig.volume << std::endl;
+        std::cerr << "current holdings: " << current_holdings << std::endl;
+        std::cerr << "current balance: " << balance << std::endl;
     }
-    
-    std::cerr<<"finish running, the final balance is: "<<balance<<std::endl;
+    double loss_percentage = (static_cast<double>(total_earnings) / initial_balance) * 100.0;
+
+    std::cerr << "finish running, the initial balance was: " << initial_balance << std::endl;
+    std::cerr << "final balance is: " << balance << std::endl;
+    std::cerr << "total loss: " << loss_percentage << "%"<< std::endl;
     return 0;
 }
