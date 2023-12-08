@@ -70,8 +70,8 @@ void DataCrawler::parseAndSaveData(const std::string& readBuffer, const std::str
         double low = it.value().at("low");
         double close = it.value().at("close");
         double volume = it.value().at("volume");
-
-        csvFile << ticker << "," << date << "," << open << "," << high << "," << low << "," << close << "," << volume << "\n";
+        // to match the data input format for later use, due to api limit, use clse as current price
+        csvFile << ticker << "," << date << "," << date  << "," << close << ","<< high << "," << low << "," << open << "," << close << "," << volume << "\n";
     }
 
     // Close the file
