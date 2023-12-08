@@ -98,9 +98,16 @@ int main(int argc, char** argv){
             current_holdings += sig.volume;
         }
         else{
+            if(sig.volume > current_holdings){
+                transaction_cost = current_holdings * sig.price;
+                current_holdings = 0;
+            }
+            else{
+                current_holdings -= sig.volume;
+            }
             balance += transaction_cost;
-            current_holdings -= sig.volume;
-            total_earnings += transaction_cost - (sig.price * sig.volume);
+            
+            // total_earnings += transaction_cost - (sig.price * sig.volume);
         }
 
         std::cerr << (sig.type == Signal::SignalType::BUY ? "BUY" : "SELL") << std::endl;
@@ -109,10 +116,10 @@ int main(int argc, char** argv){
         std::cerr << "current holdings: " << current_holdings << std::endl;
         std::cerr << "current balance: " << balance << std::endl;
     }
-    double loss_percentage = (static_cast<double>(total_earnings) / initial_balance) * 100.0;
+    double earning_percentage = (static_cast<double>(balance - initial_balance) / initial_balance) * 100.0;
 
     std::cerr << "finish running, the initial balance was: " << initial_balance << std::endl;
     std::cerr << "final balance is: " << balance << std::endl;
-    std::cerr << "total loss: " << loss_percentage << "%"<< std::endl;
+    std::cerr << "total earning: " << earning_percentage << "%"<< std::endl;
     return 0;
 }
